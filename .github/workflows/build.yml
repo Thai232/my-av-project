@@ -10,6 +10,8 @@ on:
 jobs:
   build:
     runs-on: windows-2022
+    permissions:
+      contents: read
 
     steps:
     - name: Checkout code
