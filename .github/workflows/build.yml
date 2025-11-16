@@ -91,7 +91,7 @@ jobs:
         Write-Host "Disabled Spectre Mitigation for user project"
 
     - name: Build solution
-      run: msbuild avscan.sln /p:Configuration=Release /p:Platform=x64
+      run: msbuild.exe avscan.sln -p:Configuration=Release -p:Platform=x64 -p:RunInfVerif=false -p:RunSignTool=false
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
