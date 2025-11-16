@@ -76,7 +76,7 @@ jobs:
 
     - name: Build filter (Driver)
       run: |
-        msbuild.exe filter/avscan.vcxproj -p:Configuration=Release -p:Platform=x64 -p:RunInfVerif=false -p:RunSignTool=false
+        msbuild.exe filter/avscan.vcxproj -t:Build -p:Configuration=Release -p:Platform=x64
         
     - name: Build user (Application)
       run: |
