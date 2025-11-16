@@ -25,23 +25,15 @@ jobs:
       run: |
         $vcxprojPath = "filter\avscan.vcxproj"
         [xml]$vcxproj = Get-Content $vcxprojPath
-        
-        # Add namespace manager
         $ns = New-Object System.Xml.XmlNamespaceManager($vcxproj.NameTable)
         $ns.AddNamespace("ms", "http://schemas.microsoft.com/developer/msbuild/2003")
-        
-        # Find all ItemDefinitionGroup nodes
         $itemDefGroups = $vcxproj.SelectNodes("//ms:ItemDefinitionGroup", $ns)
-        
         foreach ($itemDefGroup in $itemDefGroups) {
-          # Get or create ClCompile node
           $clCompile = $itemDefGroup.SelectSingleNode("ms:ClCompile", $ns)
           if ($null -eq $clCompile) {
             $clCompile = $vcxproj.CreateElement("ClCompile", $vcxproj.DocumentElement.NamespaceURI)
             $itemDefGroup.AppendChild($clCompile) | Out-Null
           }
-          
-          # Check if SpectreMitigation already exists
           $spectreMitigation = $clCompile.SelectSingleNode("ms:SpectreMitigation", $ns)
           if ($null -eq $spectreMitigation) {
             $spectreMitigation = $vcxproj.CreateElement("SpectreMitigation", $vcxproj.DocumentElement.NamespaceURI)
@@ -51,32 +43,22 @@ jobs:
             $spectreMitigation.InnerText = "false"
           }
         }
-        
         $vcxproj.Save($vcxprojPath)
-        Write-Host "Disabled Spectre Mitigation for filter project"
 
     - name: Disable Spectre Mitigation for user project
       shell: pwsh
       run: |
         $vcxprojPath = "user\avscanuser.vcxproj"
         [xml]$vcxproj = Get-Content $vcxprojPath
-        
-        # Add namespace manager
         $ns = New-Object System.Xml.XmlNamespaceManager($vcxproj.NameTable)
         $ns.AddNamespace("ms", "http://schemas.microsoft.com/developer/msbuild/2003")
-        
-        # Find all ItemDefinitionGroup nodes
         $itemDefGroups = $vcxproj.SelectNodes("//ms:ItemDefinitionGroup", $ns)
-        
         foreach ($itemDefGroup in $itemDefGroups) {
-          # Get or create ClCompile node
           $clCompile = $itemDefGroup.SelectSingleNode("ms:ClCompile", $ns)
           if ($null -eq $clCompile) {
             $clCompile = $vcxproj.CreateElement("ClCompile", $vcxproj.DocumentElement.NamespaceURI)
             $itemDefGroup.AppendChild($clCompile) | Out-Null
           }
-          
-          # Check if SpectreMitigation already exists
           $spectreMitigation = $clCompile.SelectSingleNode("ms:SpectreMitigation", $ns)
           if ($null -eq $spectreMitigation) {
             $spectreMitigation = $vcxproj.CreateElement("SpectreMitigation", $vcxproj.DocumentElement.NamespaceURI)
@@ -86,12 +68,21 @@ jobs:
             $spectreMitigation.InnerText = "false"
           }
         }
-        
         $vcxproj.Save($vcxprojPath)
-        Write-Host "Disabled Spectre Mitigation for user project"
 
-    - name: Build solution
-      run: msbuild.exe avscan.sln -p:Configuration=Release -p:Platform=x64 -p:RunInfVerif=false -p:RunSignTool=false
+    # === THAY ĐỔI QUAN TRỌNG BẮT ĐẦU TỪ ĐÂY ===
+    # Chúng ta không build avscan.sln nữa
+    # Thay vào đó, chúng ta build 2 dự án riêng biệt
+
+    - name: Build filter (Driver)
+      run: |
+        msbuild.exe filter/avscan.vcxproj -p:Configuration=Release -p:Platform=x64 -p:RunInfVerif=false -p:RunSignTool=false
+        
+    - name: Build user (Application)
+      run: |
+        msbuild.exe user/avscanuser.vcxproj -p:Configuration=Release -p:Platform=x64
+
+    # === KẾT THÚC THAY ĐỔI ===
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
